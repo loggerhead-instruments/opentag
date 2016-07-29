@@ -1,5 +1,5 @@
 
-filename = "/w/loggerhead/R/opentag/M1.DSG"
+filename = "/w/loggerhead/opentag/R/M1.DSG"
 
 datafile = file(filename, "rb")
 
@@ -49,7 +49,9 @@ nSIDSPEC = nSIDSPEC - 2
 # SID_REC 
 
 # IMU dataframe
-# Pressure/Temperature dataframe
+
+INER_df = data.frame()  # Inertial dataframe
+PTMP_df = data.frame()  # Pressure/Temperature dataframe
 while (1) {
     nSID = readBin(datafile, integer(), n = 1, size = 1, endian = "little")
     chan = readBin(datafile, integer(), n = 1, size = 1, endian = "little")
@@ -58,6 +60,9 @@ while (1) {
       nbytes_2 = readBin(datafile, integer(), n = 1, size = 4, endian = "little")
     }
     cur_sid = nSID + 1
+    if (length(cur_sid) == 0){
+      break;
+    }
     if(cur_sid>0 & cur_sid<8){
       if(dForm[cur_sid] == 2){
         nsamples = nBytes[cur_sid] / 2
@@ -65,14 +70,23 @@ while (1) {
       }
       if(dForm[cur_sid] == 3){
         nsamples = nBytes[cur_sid] / 3
-        chunk = readBin(datafile, integer(), n = nsamples, size = 3, endian = "little")
+        chunk = readBin(datafile, integer(), n = nsamples * 3, size = 1, endian = "little")
       }
       if(dForm[cur_sid] == 4){
         nsamples = nBytes[cur_sid] / 4
         chunk = readBin(datafile, numeric(), n = nsamples, size = 4, endian = "little")
       }
       # add to appropriate dataframe as read in
-      if (length(chunk) == nsamples) break;
+      dim(chunk) <- c(length(chunk) / numChan[cur_sid], numChan[cur_sid]) ## (rows, cols)
+      if(SID[cur_sid] == "INER"){
+        INER_df = rbind(INER_df, data.frame(chunk))
+      }
+      if(SID[cur_sid] == "PTMP"){
+        PTMP_df = rbind(PTMP_df, data.frame(chunk))
+      }
     }
 }
 close(datafile)
+
+# calibrate values
+
