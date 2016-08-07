@@ -1,8 +1,8 @@
 # otload.R: Read in OpenTag .DSG files
 # Converts raw values to calibrated units
+# Assumes all sensors are recorded (accel, mag, gyro, pressure, temperature)
 
 # To do:
-# - check values correct
 # - add datetime
 
 filename = "/w/loggerhead/opentag/R/M1.DSG"
@@ -77,7 +77,7 @@ nSIDSPEC = nSIDSPEC - 2
 
 # IMU dataframe
 
-INER_df <- data.frame("accelX" = numeric(0), "accelY" = numeric(0), "accelZ" = numeric(0), "magX" = numeric(0), "magY" = numeric(0), "magZ" = numeric(0), "gyroX" = numeric(0), "gyroY" = numeric(0), "gyroZ" = numeric(0))  # Inertial dataframe
+INER_df9 <- data.frame()  # Inertial dataframe
 PTMP_df8 <- data.frame()  # Pressure/Temperature dataframe with byte values
 while (1) {
     nSID = readBin(datafile, integer(), n = 1, size = 1, endian = "little")
@@ -106,8 +106,8 @@ while (1) {
       # add to appropriate dataframe as read in
       
       if(SID[cur_sid] == "INER"){
-        dim(chunk) <- c(length(chunk) / numChan[cur_sid], numChan[cur_sid]) ## (rows, cols)
-        INER_df = rbind(INER_df, data.frame(chunk))
+        #dim(chunk) <- c(length(chunk) / numChan[cur_sid], numChan[cur_sid]) ## (rows, cols)
+        INER_df9 = rbind(INER_df9, data.frame(chunk))
       }
       if(SID[cur_sid] == "PTMP"){
         #dim(chunk) <- c(6,length(chunk) /  6, 6) ## (rows, cols)
@@ -124,18 +124,17 @@ gyro_cal=500.0/32768.0;  # 500 degrees per second (16-bit ADC)
 mag_cal=1.0/1090.0;  #1090 LSB/Gauss
 
 # Inertial headings calibration
-names(INER_df) <- c("accelX", "accelY", "accelZ", "magX", "magY", "magZ", "gyroX", "gyroY", "gyroZ")
-INER_df$accelX <- INER_df$accelX * accel_cal
-INER_df$accelY <- INER_df$accelY * accel_cal
-INER_df$accelZ <- INER_df$accelZ * accel_cal
-
-INER_df$magX <- INER_df$magX * mag_cal
-INER_df$magY <- INER_df$magY * mag_cal
-INER_df$magZ <- INER_df$magZ * mag_cal
-
-INER_df$gyroX <- INER_df$gyroX * gyro_cal
-INER_df$gyroY <- INER_df$gyroY * gyro_cal
-INER_df$gyroZ <- INER_df$gyroZ * gyro_cal
+n = nrow(INER_df9)
+INER_df = data.frame("accelX" = accel_cal * INER_df9[seq(1, n, 9), 1],
+                     "accelY" = accel_cal * INER_df9[seq(2, n, 9), 1],
+                     "accelZ" = accel_cal * INER_df9[seq(3, n, 9), 1],
+                     "magX" = mag_cal * INER_df9[seq(4, n, 9), 1],
+                     "magY" = mag_cal * INER_df9[seq(5, n, 9), 1],
+                     "magZ" = mag_cal * INER_df9[seq(6, n, 9), 1],
+                     "gyroX" = gyro_cal * INER_df9[seq(7, n, 9), 1],
+                     "gyroY" = gyro_cal * INER_df9[seq(8, n, 9), 1],
+                     "gyroZ" = gyro_cal * INER_df9[seq(9, n, 9), 1]
+                     )
 
 # Pressure/Temperature
 # Combine values into 24-bit value and use calibration constants from files
@@ -148,6 +147,7 @@ OFF = POFF * 65536.0 + (TCOFF * dT) / 128.0
 SENS = PSENS * 32768.0 + (dT * TCSENS) / 256.0
 
  # mbar (i.e. a value of 1 = 1 mbar = ~1 cm depth resolution) 
-PTMP_df = data.frame("temperature" = (2000.0 + dT * TEMPSENS / 8388608.0) / 100.0 , "pressure" = (D1 * SENS / 2097152.0 - OFF) / 81920.0)
-#drops <- c("X1", "X2", "X3", "X4", "X5", "X6")
-#PTMP_df = PTMP_df[ , !(names(PTMP_df) %in% drops)]
+PTMP_df = data.frame("temperature" = (2000.0 + dT * TEMPSENS / 8388608.0) / 100.0 ,
+                     "pressure" = (D1 * SENS / 2097152.0 - OFF) / 81920.0)
+
+rm(PTMP_df8, INER_df9)
