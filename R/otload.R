@@ -5,6 +5,9 @@
 # To do:
 # - add datetime
 
+# Required packages
+require(lubridate)
+
 filename = "/w/loggerhead/opentag/R/M1.DSG"
 calfilename = "/w/loggerhead/opentag/R/PRESSTMP.CAL"
 
@@ -125,7 +128,7 @@ mag_cal=1.0/1090.0;  #1090 LSB/Gauss
 
 # Inertial headings calibration
 n = nrow(INER_df9)
-INER_df = data.frame("accelX" = accel_cal * INER_df9[seq(1, n, 9), 1],
+INER = data.frame("accelX" = accel_cal * INER_df9[seq(1, n, 9), 1],
                      "accelY" = accel_cal * INER_df9[seq(2, n, 9), 1],
                      "accelZ" = accel_cal * INER_df9[seq(3, n, 9), 1],
                      "magX" = mag_cal * INER_df9[seq(4, n, 9), 1],
@@ -147,7 +150,23 @@ OFF = POFF * 65536.0 + (TCOFF * dT) / 128.0
 SENS = PSENS * 32768.0 + (dT * TCSENS) / 256.0
 
  # mbar (i.e. a value of 1 = 1 mbar = ~1 cm depth resolution) 
-PTMP_df = data.frame("temperature" = (2000.0 + dT * TEMPSENS / 8388608.0) / 100.0 ,
+PTMP = data.frame("temperature" = (2000.0 + dT * TEMPSENS / 8388608.0) / 100.0 ,
                      "pressure" = (D1 * SENS / 2097152.0 - OFF) / 81920.0)
 
+# Datetime
+startDT = make_datetime(year = year + 2000, month=month, day=mday, hour=hour, min=minute, sec=second, tz="UTC")
+periodS = period / 1000000.0
+# Pressure/Temp
+n = nrow(PTMP)
+duration = n * periodS[2]  #duration in seconds
+endDT = startDT + dseconds(duration)
+PTMP$datetime = seq(startDT, endDT, length.out = n)
+
+# Inertial
+n = nrow(INER)
+duration = n * periodS[1] / 1000000.0 #duration in seconds
+endDT = startDT + dseconds(duration)
+INER$datetime = seq(startDT, endDT, length.out = n)
+
+# clean up
 rm(PTMP_df8, INER_df9)
