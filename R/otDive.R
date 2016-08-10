@@ -51,8 +51,13 @@ INER$pitch = theta / radPerDeg
 INER$Roll = phi / radPerDeg
 INER$Yaw = 180 + (psi / radPerDeg)
 
-# ODBA
-
+# VDBA
+smoothDur = 2 # remove moving average of smoothDur seconds
+n = round(smoothDur / periodS[1])
+#moving average centered around lag 0
+INER$VDBA = sqrt((INER$accelX - stats::filter(INER$accelX, rep(1/n, n), sides = 2))^2 +
+                (INER$accelY - stats::filter(INER$accelY, rep(1/n, n), sides = 2))^2 +
+                (INER$accelZ - stats::filter(INER$accelZ, rep(1/n, n), sides = 2))^2)
 
 # Dive detection
 
