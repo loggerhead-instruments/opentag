@@ -14,7 +14,7 @@ require(lubridate)
 path = "/w/loggerhead/opentag/R/sample/R012/"
 
 startfile = 2  # specify name of file to start with
-endfile = 10    # specify name of file to end with
+endfile = 3    # specify name of file to end with
 
 # initialize empty vectors based on size of first file
 numfiles = endfile - startfile + 1
@@ -184,12 +184,12 @@ startDT = make_datetime(year = year + 2000, month=month, day=mday, hour=hour, mi
 periodS = period / 1000000.0
 # Pressure/Temp
 n = nrow(PTMP)
-duration = n * periodS[2]  #duration in seconds
+duration = n * periodS[2] * 2  #duration in seconds (*2 because alternates pressure and temperature)
 endDT = startDT + dseconds(duration)
 PTMP$datetime = seq(startDT, endDT, length.out = n)
 
 # Inertial
 n = nrow(INER)
-duration = n * periodS[1] / 1000000.0 #duration in seconds
+duration = n * periodS[1]  #duration in seconds
 endDT = startDT + dseconds(duration)
 INER$datetime = seq(startDT, endDT, length.out = n)
