@@ -182,9 +182,11 @@ PTMP = data.frame("temperature" = (2000.0 + dT * TEMPSENS / 8388608.0) / 100.0 ,
 # Datetime
 startDT = make_datetime(year = year + 2000, month=month, day=mday, hour=hour, min=minute, sec=second, tz="UTC")
 periodS = period / 1000000.0
+periodS[2] = periodS[2] * 2 # *2 because alternates pressure and temperature
+
 # Pressure/Temp
 n = nrow(PTMP)
-duration = n * periodS[2] * 2  #duration in seconds (*2 because alternates pressure and temperature)
+duration = n * periodS[2]   #duration in seconds 
 endDT = startDT + dseconds(duration)
 PTMP$datetime = seq(startDT, endDT, length.out = n)
 
