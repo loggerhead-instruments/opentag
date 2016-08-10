@@ -154,15 +154,21 @@ mag_cal=1.0/1090.0;  #1090 LSB/Gauss
 
 # Inertial headings calibration
 n = endIMU
-INER = data.frame("accelX" = accel_cal * INER[seq(1, n, 9)],
-                  "accelY" = accel_cal * INER[seq(2, n, 9)],
-                  "accelZ" = accel_cal * INER[seq(3, n, 9)],
-                  "magX" = mag_cal * INER[seq(4, n, 9)],
-                  "magY" = mag_cal * INER[seq(5, n, 9)],
-                  "magZ" = mag_cal * INER[seq(6, n, 9)],
-                  "gyroX" = gyro_cal * INER[seq(7, n, 9)],
-                  "gyroY" = gyro_cal * INER[seq(8, n, 9)],
-                  "gyroZ" = gyro_cal * INER[seq(9, n, 9)]
+# OpenTag data aren't stored in NED orientation
+# Sign to get NED orientation
+# Flip X and Y
+# cal_matrix = [M_ACCEL_CAL, -M_ACCEL_CAL, -M_ACCEL_CAL,
+#              M_MAG_CAL, -M_MAG_CAL, -M_MAG_CAL,
+#              -M_GYRO_CAL, M_GYRO_CAL, -M_GYRO_CAL]
+INER = data.frame("accelY" = accel_cal * INER[seq(1, n, 9)],
+                  "accelX" = -accel_cal * INER[seq(2, n, 9)],
+                  "accelZ" = -accel_cal * INER[seq(3, n, 9)],
+                  "magY" = mag_cal * INER[seq(4, n, 9)],
+                  "magX" = -mag_cal * INER[seq(5, n, 9)],
+                  "magZ" = -mag_cal * INER[seq(6, n, 9)],
+                  "gyroY" = -gyro_cal * INER[seq(7, n, 9)],
+                  "gyroX" = gyro_cal * INER[seq(8, n, 9)],
+                  "gyroZ" = -gyro_cal * INER[seq(9, n, 9)]
 )
 
 # Pressure/Temperature
@@ -195,3 +201,4 @@ n = nrow(INER)
 duration = n * periodS[1]  #duration in seconds
 endDT = startDT + dseconds(duration)
 INER$datetime = seq(startDT, endDT, length.out = n)
+
