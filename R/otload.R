@@ -11,10 +11,12 @@ require(lubridate)
 
 # load multiple opentag files and merge together
 # specify path for folder of files to load
-path = "/w/loggerhead/opentag/R/sample/R012/"
+#path = "/w/loggerhead/opentag/R/sample/cm145/"
+#path = "/Volumes/Dropbox/Dropbox/DSG_Files_for_David/cm147/"
+path = "/Volumes/Dropbox/Dropbox/DSG_test/"
 
-startfile = 2  # specify name of file to start with
-endfile = 3    # specify name of file to end with
+startfile = 6  # specify name of file to start with
+endfile = 6    # specify name of file to end with
 
 # initialize empty vectors based on size of first file
 numfiles = endfile - startfile + 1
@@ -153,13 +155,19 @@ gyro_cal=500.0/32768.0;  # 500 degrees per second (16-bit ADC)
 mag_cal=1.0/1090.0;  #1090 LSB/Gauss
 
 # Inertial headings calibration
-n = endIMU
+n = length(INER)
 # OpenTag data aren't stored in NED orientation
 # Sign to get NED orientation
 # Flip X and Y
 # cal_matrix = [M_ACCEL_CAL, -M_ACCEL_CAL, -M_ACCEL_CAL,
 #              M_MAG_CAL, -M_MAG_CAL, -M_MAG_CAL,
 #              -M_GYRO_CAL, M_GYRO_CAL, -M_GYRO_CAL]
+
+# truncate to divisible by 9 points using modulus
+if (n %% 9)  {
+  INER = INER[-(n + 1 - (n %% 9)): -n]
+}
+n = length(INER)
 INER = data.frame("accelY" = accel_cal * INER[seq(1, n, 9)],
                   "accelX" = -accel_cal * INER[seq(2, n, 9)],
                   "accelZ" = -accel_cal * INER[seq(3, n, 9)],
