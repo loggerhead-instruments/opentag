@@ -71,7 +71,7 @@ int bufferpos=0; //current position in double buffer
 
 boolean firstwritten;
 float srate = 1400.0;
-unsigned long newfilebufs = (unsigned long) (60.0 / (halfbuf/srate));
+unsigned long newfilebufs = (unsigned long) (300.0 / (halfbuf/srate));
 unsigned int RTCcounter=0;
 boolean checkstop = 0;
 boolean introperiod=1;  //flag for introductory period; used for keeping LED on for a little while
@@ -106,6 +106,7 @@ void loop() {
         if(LEDSON | introperiod) digitalWrite(LED_GRN,HIGH);        
         if(file.write(buffer, halfbuf)==-1) resetFunc(); 
         time2write=0;
+        nbufs+=1;
         if(LEDSON | introperiod) digitalWrite(LED_GRN,LOW);
       }
       if(time2write==2)
@@ -116,7 +117,7 @@ void loop() {
        }    
 
       // new file every n nbufs
-      if(nbufs >= newfilebufs)
+      if(nbufs >= newfilebufs * 2)
       {
         introperiod = 0;
         file.close();
