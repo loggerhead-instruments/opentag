@@ -223,6 +223,15 @@ void LoadScript(SdFile file)
 	}while(n);
 	file.close();  
   }
+  else
+    {   
+    //enable defaults if no script present
+    accelflagint=1;  //flag to enable accelerometer; 
+    compflag=1; //flag to enable 3d magnetometer (compass)
+    gyroflag=1; //flag to enable gyro
+    pressflag=1; //flag to enable pressure
+    tempflag=1; //flag to enable temperature
+ }
 
  card.chdir();  //change to root
  return;	

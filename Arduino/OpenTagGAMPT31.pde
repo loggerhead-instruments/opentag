@@ -21,6 +21,12 @@
 // Some code derived from SparkFun SF9DOF_AHRS by Doug Weibel and Jose Julio
 // Based on ArduIMU v1.5 by Jordi Munoz and William Premerlani, Jose Julio and Doug Weibel
 
+// Version 3.1.1
+// fixed bug with depth calculated as bars and not meters
+
+// Version 3.1
+// 1. Fixed bug with always recording all sensors
+
 // Version 3.0
 // 1. Added duty cycle record to WT command
 // 2. Removed wake on day of week
@@ -158,12 +164,12 @@ int PRESS=A6;
 int AccelAddressInt = 0x53;  //with pin 12 grounded; board accel
 
 // Default Flags...These can be changed by script
-boolean accelflagint=1;  //flag to enable accelerometer; 
-boolean compflag=1; //flag to enable 3d magnetometer (compass)
-boolean gyroflag=1; //flag to enable gyro
+boolean accelflagint=0;  //flag to enable accelerometer; 
+boolean compflag=0; //flag to enable 3d magnetometer (compass)
+boolean gyroflag=0; //flag to enable gyro
 byte gyrorange = 1; //+/- 500 degrees/s
-boolean pressflag=1; //flag to enable pressure
-boolean tempflag=1; //flag to enable temperature
+boolean pressflag=0; //flag to enable pressure
+boolean tempflag=0; //flag to enable temperature
 boolean HYDRO1flag=0; // flag to record HYDRO1
 boolean printflag=0; //flag to enable printing of sensor data to serial output
 byte burnflag=0;  // flag to enable burn wire
@@ -316,7 +322,7 @@ void setup() {
     SidRec[n].nbytes_2=0;
   }
 
-  dfh.Version=10300;
+  dfh.Version=10311;
   dfh.UserID=3333;
   sensor_init();
   if(pressflag|tempflag)
@@ -934,5 +940,5 @@ void calcPressTemp(){
   float SENS = (float)PSENS*32768 + (dT*(float)TCSENS)/256;
   
   float P16 = (D1*SENS/2097152-OFF)/81920;  // mbar
-  depth = -(1010 - P16) / 1000;
+  depth = -(1010 - P16) / 10000.0;
 }
