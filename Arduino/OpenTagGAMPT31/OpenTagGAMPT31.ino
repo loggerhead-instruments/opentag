@@ -217,9 +217,7 @@ int inactivity_threshold = 100;
 int inactivity_duration = 60; //seconds
 byte threshold = 0; //accelerometer threshold
 
-unsigned int i2cpowinterval = 60;  //interval in seconds used to toggle i2cpow
-int i2cpowdepth = 1; // depth below which i2cpow on
-unsigned int checkstopcount;
+float i2cpowdepth = 1.0; // depth below which i2cpow on
 boolean I2CPOW_STATE;
 
 #define SECONDS_IN_MINUTE 60
@@ -434,26 +432,28 @@ void loop() {
         nowtimesec=RTCToUNIXTime(&nowtime);     
         //Serial.println(nowtimesec); 
         
-        checkstopcount+=2;
         calcPressTemp();
-        if (checkstopcount> i2cpowinterval & i2cpowinterval>0){
-          checkstopcount = 0;
-          I2CPOW_STATE = !I2CPOW_STATE;
+
+        if(depth < i2cpowdepth) {
+          I2CPOW_STATE = HIGH;
         }
-        
-        if(depth < i2cpowdepth) I2CPOW_STATE = HIGH;
-        digitalWrite(I2CPOW, I2CPOW_STATE);
-        
+        else{
+          I2CPOW_STATE = LOW;
+        }
+
         if(burnflag>0)
         {
-           ULONG burnduration=nowtimesec-burntimesec;
+           ULONG burnduration = nowtimesec - burntimesec;
            if ((burnduration>0) & (burnduration<3600)){  //burn for 1 hour
              digitalWrite(BURN,HIGH);  //burn baby burn
            }
            else{
              digitalWrite(BURN,LOW);
            }
+           if(burntimesec < nowtimesec) I2CPOW_STATE = HIGH; // VHF always on after burn
         }
+
+        digitalWrite(I2CPOW, I2CPOW_STATE);
 
         if (abs(magnetom_x-old_magnetom_x)<inactivity_threshold) InactiveTime+=2;
         else InactiveTime=0;
@@ -766,8 +766,7 @@ void system_init(){
     digitalWrite(BURN,LOW);
     digitalWrite(LED_RED,LOW);
     digitalWrite(LED_GRN,HIGH);
-    digitalWrite(I2CPOW, LOW);
-    if(i2cpowinterval == 0) digitalWrite(I2CPOW, HIGH);
+    digitalWrite(I2CPOW, HIGH);
     analogReference(DEFAULT);
 }
 
@@ -932,12 +931,13 @@ void calcPressTemp(){
   float D1 = (float)((((unsigned long)Pbuff[0]<<16) | ((unsigned long)Pbuff[1]<<8) | ((unsigned long) Pbuff[2])));
   float D2 = (float)((((unsigned long)Tbuff[0]<<16) | ((unsigned long)Tbuff[1]<<8) | ((unsigned long) Tbuff[2])));
   
-  float dT = D2 - (float) TREF * 256;
-  float T16 = (2000+dT*(float)TEMPSENS/(float)8388608);
+  float dT = D2 - (float) TREF * 256.0;
+  float T16 = (2000.0+dT*(float)TEMPSENS/(float)8388608.0);
   
-  float OFF = (float)POFF*65536 + ((float) TCOFF*dT)/128;
-  float SENS = (float)PSENS*32768 + (dT*(float)TCSENS)/256;
+  float OFF = (float)POFF*65536.0 + ((float) TCOFF*dT)/128.0;
+  float SENS = (float)PSENS*32768.0 + (dT*(float)TCSENS)/256;
   
-  float P16 = (D1*SENS/2097152-OFF)/81920;  // mbar
-  depth = -(1010 - P16) / 10000.0;
+  float P16 = (D1*SENS/2097152.0-OFF)/81920.0;  // mbar
+  //Serial.println(P16);
+  depth = -(1010.0 - P16) / 1113.77; // mbar_per_m = 1113.77
 }

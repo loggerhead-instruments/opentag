@@ -106,10 +106,10 @@ int ProcCmd(char *pCmd)
                    break;
                 } 
                 
-                // I2CPOW toggle based on interval and depth
+                // I2CPOW toggle based on depth
 		case ('I' + ('S'<<8)):
 		{
-                   sscanf(&pCmd[3],"%d %d",&i2cpowinterval, &i2cpowdepth);
+                   sscanf(&pCmd[3],"%d",&i2cpowdepth);
                    break;
                 } 
                 
