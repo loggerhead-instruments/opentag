@@ -1,6 +1,6 @@
-/* Loggerhead Instruments OpenTagGAMPT2 v2.9
-   Release 16 May 2016
-   Copyright 2016 by David Mann
+/* Loggerhead Instruments OpenTagGAMPT2 v23.1
+   Release 5 October 2017
+   Copyright 2017 by David Mann
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -132,8 +132,7 @@
 // "INER" Accel Int, Comp, Gyro
 
 #include <stdint.h>
-#include <SdFat.h> // http://code.google.com/p/sdfatlib/  //note that the SD library that comes with Arduino does not support file timestamps, so not using it
-#include <SdFatUtil.h>
+#include <SdFat.h> 
 #include <Wire.h>
 #include <MsTimer2.h>  // Note: MsTimer2.cpp modified so it does not disable interrupts
 #include <datafile.h>
@@ -142,7 +141,7 @@
 #include <avr/power.h>
 
 // SD chip select pin
-const uint8_t CS = SS_PIN;
+const uint8_t CS = 10;
 
 byte state;
 #define GO_TO_SLEEP 0
@@ -180,7 +179,7 @@ boolean alarmflag=0; //=1, wake up every HH:MM for HH:MM
 boolean alarmstatus=0; //if woke by alarm alarmstatus=1
 boolean motionflag=0; // =1 using motion from acceleromter to wake
 
-SdFat card;
+SdFat sd;
 SdFile file;
 
 char filename[12];
@@ -307,7 +306,7 @@ void setup() {
   I2C_Init();
   //Serial.begin(57600); 
 
-  if (!card.init(SPI_FULL_SPEED, CS)) resetFunc();
+  SDcard_init();
   LoadScript(file);
   
   mscale_period=iperiod/speriod;
@@ -776,7 +775,7 @@ void SDcard_init(){
     pinMode(SD_POW, OUTPUT);      
     digitalWrite(SD_POW, HIGH);  //turn on power to SD card.  High for OpenTag.
     trueDelay(200);
-    if (!card.init(SPI_FULL_SPEED, CS)) resetFunc();
+    if (!sd.begin(CS, SPI_FULL_SPEED)) resetFunc();
 }
 void buffer_counter_reset(){
     mscale_counter=0;

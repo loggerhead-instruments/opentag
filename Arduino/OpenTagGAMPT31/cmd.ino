@@ -204,7 +204,7 @@ void LoadScript(SdFile file)
   int16_t n;
 
    // Read card setup.txt file to set date and time, sample rate, recording interval
-   card.chdir("Script");
+   sd.chdir("Script");
    if(file.open("Default.txt", O_READ))
    {
       do{
@@ -233,7 +233,7 @@ void LoadScript(SdFile file)
     tempflag=1; //flag to enable temperature
  }
 
- card.chdir();  //change to root
+ sd.chdir();  //change to root
  return;	
 }
 
