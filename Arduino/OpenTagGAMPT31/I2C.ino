@@ -21,8 +21,8 @@ void Press_Init()
   Wire.beginTransmission(PressAddress);
   Wire.write(0x1E);  //Reset Command
   bytesread=Wire.endTransmission();
-  //Serial.println("Pressure Reset 0=success");
-  //Serial.println(bytesread);  
+//  Serial.println("Pressure Reset 0=success");
+//  Serial.println(bytesread);  
     
   delay(5);  //reset needs at least 2.8 ms
   
@@ -32,8 +32,6 @@ void Press_Init()
   Wire.endTransmission();
   
   bytesread=Wire.requestFrom(PressAddress, 2);    // request 2 bytes from device
-//  Serial.println("PROM Bytes Available");
-//  Serial.println(bytesread);
   
   while(Wire.available())   // ((Wire.available())&&(i<6))
   { 

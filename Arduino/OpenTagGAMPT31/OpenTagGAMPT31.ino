@@ -140,6 +140,18 @@
 #include <avr/sleep.h>
 #include <avr/power.h>
 
+//#define SDA_PORT PORTC
+//#define SDA_PIN 4
+//#define SCL_PORT PORTC
+//#define SCL_PIN 5
+//
+//#define I2C_TIMEOUT 100
+//#define I2C_FASTMODE 1
+//
+//#include <SoftWire.h>
+//#include <avr/io.h>
+//SoftWire Wire = SoftWire();
+
 // SD chip select pin
 const uint8_t CS = 10;
 
@@ -163,12 +175,12 @@ int PRESS=A6;
 int AccelAddressInt = 0x53;  //with pin 12 grounded; board accel
 
 // Default Flags...These can be changed by script
-boolean accelflagint=0;  //flag to enable accelerometer; 
-boolean compflag=0; //flag to enable 3d magnetometer (compass)
+boolean accelflagint=1;  //flag to enable accelerometer; 
+boolean compflag=1; //flag to enable 3d magnetometer (compass)
 boolean gyroflag=0; //flag to enable gyro
 byte gyrorange = 1; //+/- 500 degrees/s
-boolean pressflag=0; //flag to enable pressure
-boolean tempflag=0; //flag to enable temperature
+boolean pressflag=1; //flag to enable pressure
+boolean tempflag=1; //flag to enable temperature
 boolean HYDRO1flag=0; // flag to record HYDRO1
 boolean printflag=0; //flag to enable printing of sensor data to serial output
 byte burnflag=0;  // flag to enable burn wire
@@ -393,12 +405,12 @@ void loop() {
     {
       if(time2write==1)
       {
-        if(LEDSON | introperiod) digitalWrite(LED_GRN,HIGH);        
+       // if(LEDSON | introperiod) digitalWrite(LED_GRN,HIGH);        
         if(file.write(&SidRec[0],sizeof(SID_REC))==-1) resetFunc();  // make sure wrote; if not reboot
         if(file.write(buffer, halfbuf)==-1) resetFunc(); 
         UpdateSID_REC(0,halfbuf);  // update SID_REC with number of bytes written
         time2write=0;
-        if(LEDSON | introperiod) digitalWrite(LED_GRN,LOW);
+     //   if(LEDSON | introperiod) digitalWrite(LED_GRN,LOW);
       }
       if(time2write==2)
       {       
@@ -575,8 +587,8 @@ void flash(){
 
   if(mscale_PTcounter>=mscale_PTperiod)  //alternate reading temperature and pressure
   {
-    updatepressflag=~updatepressflag;
-    if(pressflag & updatepressflag)
+    updatepressflag = !updatepressflag;
+    if(updatepressflag)
     {
       Read_Press();  //read current value of pressure and temperature
       PTbuffer[bufferposPT]=Pbuff[0];
@@ -589,8 +601,6 @@ void flash(){
     }
     else
     {
-      if(tempflag )
-      {
         Read_Temp();
         PTbuffer[bufferposPT]=Tbuff[0];
         incrementPTbufpos();
@@ -599,7 +609,6 @@ void flash(){
         PTbuffer[bufferposPT]=Tbuff[2];
         incrementPTbufpos();
         Update_Press();
-      }
     }
     mscale_PTcounter=0;
   }
@@ -931,13 +940,13 @@ void calcPressTemp(){
   float D1 = (float)((((unsigned long)Pbuff[0]<<16) | ((unsigned long)Pbuff[1]<<8) | ((unsigned long) Pbuff[2])));
   float D2 = (float)((((unsigned long)Tbuff[0]<<16) | ((unsigned long)Tbuff[1]<<8) | ((unsigned long) Tbuff[2])));
   
-  float dT = D2 - (float) TREF * 256.0;
-  float T16 = (2000.0+dT*(float)TEMPSENS/(float)8388608.0);
+  float dT = D2 - ((float) TREF * 256.0);
+  float T16 = (2000.0 + dT * (float)TEMPSENS / 8388608.0) / 100.0;
   
-  float OFF = (float)POFF*65536.0 + ((float) TCOFF*dT)/128.0;
-  float SENS = (float)PSENS*32768.0 + (dT*(float)TCSENS)/256;
+  float OFF = ((float) POFF * 65536.0)  + (((float) TCOFF * dT) / 128.0);
+  float SENS = ((float) PSENS * 32768.0) + ((dT * (float) TCSENS) / 256.0);
   
-  float P16 = (D1*SENS/2097152.0-OFF)/81920.0;  // mbar
-  //Serial.println(P16);
-  depth = -(1010.0 - P16) / 1113.77; // mbar_per_m = 1113.77
+  float P16 = (D1 * SENS / 2097152.0 - OFF) / 8192.0 / 10.0;  // mbar
+
+  depth = -(1010.0 - P16) / 111.3; // 111.3=mBar/meter
 }
